@@ -1,0 +1,214 @@
+系统 : MacOS 10.13.4
+
+IDE : Android Studio v3.0.1
+
+Java : 1.8.0_151
+
+node : v9.11.1
+
+Python : 2.7.10
+
+1. 创建一个Android项目;
+
+2. 在terminal中输入: npm init (生成package.json文件)
+
+   * package name: (rnappdemo) 输入项目名称，全部小写：rnappdemo
+
+   * version: (1.0.0) 输入版本号，可以直接回车，也可以输入自己想要的初始版本号
+
+   * description 输入项目描述，随便输入：first reactnativeapp
+
+   * entry point: (index.js)输入reactnative的入口文件：index.android.js
+
+   * test command: 输入：no
+
+   * git repository: 输入：no
+
+   * keywords: 输入：no
+
+   * author: 输入作者信息
+
+   * license: (ISC) 输入许可 默认ISC
+
+   * 最后输入yes确认 Is this ok? (yes) yes;
+   
+3. 在terminal中输入: npm install --save react react-native (安装React 和 React Native)，
+   安装成功之后查看项目中多出了一个node_modules目录，说明react和react-native安装成功;
+
+4. 在项目根目录下新建一个名为.flowconfig的文件，将[.flowconfig网页](https://raw.githubusercontent.com/facebook/react-native/master/.flowconfig)
+复制到.flowconfig文件中;
+
+5. 在项目根目录下package.json文件中的script标签里添加 "start": "nodenode_modules/react-native/local-cli/cli.js start";
+
+6. 在项目根目录下添加index.android.js文件，文件格式设置为UTF-8内容为：
+
+```
+ 'use strict';  
+ import React from 'react';  
+ import {  
+   AppRegistry,  
+   StyleSheet,  
+   Text,  
+   View  
+ } from 'react-native';  
+ class HelloWorld extends React.Component {  
+   render() {  
+     return (  
+       <View style={styles.container}>  
+         <Text style={styles.hello}>第一个混合RNAPP</Text>  
+       </View>  
+     )  
+   }  
+ }  
+ var styles = StyleSheet.create({  
+   container: {  
+     flex: 1,  
+     justifyContent: 'center',  
+   },  
+   hello: {  
+     fontSize: 20,  
+     textAlign: 'center',  
+     margin: 10,  
+   },  
+ });  
+ AppRegistry.registerComponent('HelloWorld', () => HelloWorld); 
+ ```
+ 
+ 7. * 项目app模块build.gradle配置，在android->defaultConfig最后添加NDK支持：
+ 
+
+  ndk {
+    abiFilters "armeabi-v7a", "x86"
+    }
+
+    
+    * 在android里面添加如下两个配置：
+    
+  ```
+  
+   packagingOptions {
+   
+      exclude "lib/arm64-v8a/librealm-jni.so"
+      
+    }
+    
+    configurations.all {
+    
+      resolutionStrategy.force 'com.google.code.findbugs:jsr305:1.3.9'
+      
+    }
+  ```
+  
+  
+    * 在dependencies里面添加reactnative依赖：compile "com.facebook.react:react-native:+"，完成后点击右上角的Sync now同步；
+
+ 8.  项目build.gradle配置
+ 
+    在allprojects->respositories中添加以下内容，加载最新的react-native库，然后点击右上角的Sync now同步
+    
+   
+   
+    ```
+    maven {
+         // All of React Native (JS, Android binaries) is installed from npm
+         url "$rootDir/node_modules/react-native/android"
+     }
+    ```
+    
+    
+    * 在gradle.properties文件最后添加：android.useDeprecatedNdk=true，然后点击右上角Syncnow同步；
+
+    
+   
+  9. 配置app模块AndroidManifest.xml文件
+添加网络权限：
+
+<uses-permissionandroid:name="android.permission.INTERNET" />
+
+添加弹窗权限：
+
+<uses-permission android:name="android.permission.SYSTEM_ALERT_WINDOW"/>
+
+在application里添加reactnative弹窗内置页面activity，否则摇晃手机并打开开发者菜单后，点击Dev Setting，会直接Crash：
+
+<activityandroid:name="com.facebook.react.devsupport.DevSettingsActivity"/>
+
+  10. 手动生成bundle文件，在app/src/main下新建assets目录，在终端窗口Terminal中执行：
+    react-native bundle --platform android --dev false --entry-file index.android.js --bundle-output app/src/main/assets/index.android.bundle --assets-dest app/src/main/res/
+ 
+    说明：
+
+    --platform：平台
+
+    --dev：开发模式
+
+    --entry-file：条目文件
+
+    --bundle-output：bundle文件生成的目录
+
+    --assets-dest：资源文件生成的目录
+
+    执行完成后，会在assets目录下生成两个文件：index.android.bundle、index.android.bundle.meta
+
+  11. 新建MyReactActivity，内容：
+  ```
+  public class MyReactActivity extends ReactActivity {
+
+    @Nullable
+    @Override
+    protected String getMainComponentName() {
+        return "HelloWorld";
+    }
+}```
+  
+  GetMainComponentName()方法返回的"HelloWorld"是在index.js中AppRegistry.registerComponent('HelloWorld',() => HelloWorld);注册的HelloWorld模块（第一个参数'HelloWorld'）;
+  
+  12.
+  
+  ```
+  public class MainApplication extends Application implements ReactApplication {
+
+
+    private final ReactNativeHost mReactNativeHost = new ReactNativeHost(this) {
+        @Override
+        public boolean getUseDeveloperSupport() {
+            return BuildConfig.DEBUG;
+        }
+
+        @Override
+        protected List<ReactPackage> getPackages() {
+            return Arrays.<ReactPackage>asList(new MainReactPackage());
+        }
+    };
+    @Override
+    public ReactNativeHost getReactNativeHost() {
+        return mReactNativeHost;
+    }
+
+    @Override
+    public void onCreate() {
+        super.onCreate();
+        SoLoader.init(this,false);
+    }
+}```
+
+    修改AndroidManifest.xml起始activity：
+
+    在application中添加android:name=".MainApplication"；
+
+    将MainActivity改为MyReactActivity
+    
+    13. 最后一步，以上所以配置完成后，再配置好模拟器或直接链接手机（我是真机调试，在终端Terminal窗口中执行：adb reverse tcp:8081 tcp:8081），在终端窗口下执行：npm start，启动react服务，然后绿色三角点击运行，可以摇一摇手机，在出现的弹窗点击"DevSettings->debugging"，设置Debug server host &port for device为：127.0.0.1:8081，然后重新运行，摇一摇，点击Reload，此时显示的就是"第一个混合 RNAPP"了
+    
+    
+    
+    
+    
+   其他小问题：
+   npm 下载可以使用淘宝镜像； 
+   
+   出现8081端口占用情况：
+      1. 命令 lsof -i tcp:port  （port替换成端口号，比如8081）可以查看该端口被什么程序占用，并显示PID，方便KILL
+      
+      2. 使用kill -9 + pid 
+
