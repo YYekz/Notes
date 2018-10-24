@@ -212,3 +212,5 @@ Python : 2.7.10
       
       2. 使用kill -9 + pid 
 
+如果在ios模拟器上 出现找不到模拟器情况
+sudo xcode-select -s /Applications/Xcode.app/Contents/Developer/
